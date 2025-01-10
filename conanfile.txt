@@ -1,0 +1,6 @@
+[requires]
+ftxui/5.0.0
+
+[generators]
+CMakeToolchain
+CMakeDeps
