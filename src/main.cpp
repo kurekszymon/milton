@@ -1,18 +1,20 @@
 // Copyright 2020 Arthur Sonzogni. All rights reserved.
 // Use of this source code is governed by the MIT license that can be found in
 // the LICENSE file.
-#include <array>      // for array
-#include <atomic>     // for atomic
-#include <chrono>     // for operator""s, chrono_literals
-#include <cmath>      // for sin
+#include <array>  // for array
+#include <atomic> // for atomic
+#include <chrono> // for operator""s, chrono_literals
+#include <cmath>  // for sin
+#include <cstdio>
+#include <iostream>
 #include <functional> // for ref, reference_wrapper, function
 #include <memory>     // for allocator, shared_ptr, __shared_ptr_access
 #include <stddef.h>   // for size_t
-#include <string>     // for string, basic_string, char_traits, operator+, to_string
-#include <thread>     // for sleep_for, thread
-#include <utility>    // for move
-#include <vector>     // for vector
-
+#include <stdio.h>
+#include <string>                                 // for string, basic_string, char_traits, operator+, to_string
+#include <thread>                                 // for sleep_for, thread
+#include <utility>                                // for move
+#include <vector>                                 // for vector
 #include "color_info_sorted_2d.ipp"               // for ColorInfoSorted2D
 #include "ftxui/component/component.hpp"          // for Checkbox, Renderer, Horizontal, Vertical, Input, Menu, Radiobox, ResizableSplitLeft, Tab
 #include "ftxui/component/component_base.hpp"     // for ComponentBase, Component
@@ -26,6 +28,40 @@
 #include "ftxui/screen/terminal.hpp"              // for Size, Dimensions
 
 using namespace ftxui;
+
+// Function to execute a git clone command and return the output
+std::string executeGitClone(const std::string &repo_url, const std::string &target_directory)
+{
+    std::string command = "git clone " + repo_url + " " + target_directory;
+    std::array<char, 128> buffer;
+    std::string result;
+
+    // Open the process (run the command)
+    std::shared_ptr<FILE> pipe(popen(command.c_str(), "r"), pclose);
+
+    if (!pipe)
+    {
+        return "Failed to run git clone command.";
+    }
+
+    // Read the output of the command
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
+    {
+        result += buffer.data();
+    }
+
+    // Check the exit status of the command
+    int exit_status = pclose(pipe.get());
+
+    // If the command failed, print the error message and exit status
+    if (exit_status != 0)
+    {
+        std::stringstream error_msg;
+        return error_msg.str();
+    }
+
+    return result;
+}
 
 int main()
 {
@@ -487,11 +523,47 @@ int main()
                  { return paragraph_renderer_group->Render(); });
 
     // ---------------------------------------------------------------------------
+    // Repositories
+    // ---------------------------------------------------------------------------
+    std::string some_string;
+    std::vector<std::string> entries = {
+        "entry 1",
+        "entry 2",
+        "clone xlsx-compare",
+    };
+    int selected = 0;
+
+    auto render_option = [&some_string]()
+    {
+        std::string chosen_option = some_string;
+        return hbox({text(chosen_option)});
+    };
+
+    auto option = MenuOption::VerticalAnimated();
+    option.on_enter = [&]()
+    {
+        if (selected == 2)
+        {
+            std::string output = executeGitClone("repo", "dest");
+            some_string = output;
+        }
+    };
+
+    auto menu = Menu(&entries, &selected, option);
+
+    auto menu_renderer = Renderer([render_option]
+                                  { return vbox({render_option()}); });
+
+    auto menu_container = Container::Vertical({menu, menu_renderer});
+
+    // ---------------------------------------------------------------------------
+
     // Tabs
     // ---------------------------------------------------------------------------
 
     int tab_index = 0;
     std::vector<std::string> tab_entries = {
+        "repositories",
         "htop",
         "color",
         "spinner",
@@ -503,13 +575,13 @@ int main()
         Menu(&tab_entries, &tab_index, MenuOption::HorizontalAnimated());
     auto tab_content = Container::Tab(
         {
+            menu_container,
             htop,
             color_tab_renderer,
             spinner_tab_renderer,
             gauge_component,
             compiler_renderer,
             paragraph_renderer_group_renderer,
-            //   repositories
         },
         &tab_index);
 

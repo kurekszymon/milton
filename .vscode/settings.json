@@ -52,6 +52,12 @@
         "variant": "cpp",
         "vector": "cpp",
         "algorithm": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "__tree": "cpp",
+        "condition_variable": "cpp",
+        "csignal": "cpp",
+        "iostream": "cpp",
+        "list": "cpp",
+        "map": "cpp"
     }
 }
