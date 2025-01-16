@@ -58,6 +58,14 @@
         "csignal": "cpp",
         "iostream": "cpp",
         "list": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "any": "cpp",
+        "fstream": "cpp",
+        "iomanip": "cpp",
+        "set": "cpp",
+        "unordered_set": "cpp",
+        "valarray": "cpp",
+        "atomic": "cpp",
+        "utility": "cpp"
     }
 }

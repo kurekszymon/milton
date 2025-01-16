@@ -1,5 +1,2 @@
 #!/bin/zsh
-cd $MILTON_PATH
-rm -rf build/*
-conan install . --build=missing --output-folder=conan
-
+conan install conanfile.txt --output-folder=conan --build=missing

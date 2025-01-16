@@ -12,3 +12,10 @@ CMake
 
 Ninja
 `brew install ninja`
+
+
+### quirks and features 
+
+if some library is not found try running 
+`conan install conanfile.txt --build <rm>`
+you dummy

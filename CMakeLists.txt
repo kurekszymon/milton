@@ -6,15 +6,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Load dependencies with CMakeDeps generator
 find_package(ftxui REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 # Add subdirectory for source files
 add_subdirectory(src)
 
 # Specify where to find header files
-include_directories(${CMAKE_BINARY_DIR}/conan)
-include_directories(include)
-target_link_libraries(Milton ftxui::ftxui)
+include_directories(${YAMLCPP_INCLUDE_DIRS})
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
+target_link_libraries(Milton ftxui::ftxui yaml-cpp)
 
 set(CMAKE_CXX_FLAGS "-static-libgcc -static-libstdc++")
-

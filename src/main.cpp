@@ -26,7 +26,7 @@
 #include "ftxui/screen/color.hpp"                 // for Color, Color::BlueLight, Color::RedLight, Color::Black, Color::Blue, Color::Cyan, Color::CyanLight, Color::GrayDark, Color::GrayLight, Color::Green, Color::GreenLight, Color::Magenta, Color::MagentaLight, Color::Red, Color::White, Color::Yellow, Color::YellowLight, Color::Default, Color::Palette256, ftxui
 #include "ftxui/screen/color_info.hpp"            // for ColorInfo
 #include "ftxui/screen/terminal.hpp"              // for Size, Dimensions
-
+#include "../include/Config.hpp"
 using namespace ftxui;
 
 // Function to execute a git clone command and return the output
@@ -65,6 +65,8 @@ std::string executeGitClone(const std::string &repo_url, const std::string &targ
 
 int main()
 {
+    auto config = new Config("config.yaml");
+
     auto screen = ScreenInteractive::Fullscreen();
 
     // ---------------------------------------------------------------------------
@@ -525,36 +527,45 @@ int main()
     // ---------------------------------------------------------------------------
     // Repositories
     // ---------------------------------------------------------------------------
-    std::string some_string;
-    std::vector<std::string> entries = {
-        "entry 1",
-        "entry 2",
-        "clone xlsx-compare",
-    };
-    int selected = 0;
 
-    auto render_option = [&some_string]()
+    auto repo_config = config->repositories;
+    std::string console_output;
+    int selected_index = 0;
+
+    std::vector<std::string> entries;
+    for (const auto &repo : repo_config.vector)
     {
-        std::string chosen_option = some_string;
-        return hbox({text(chosen_option)});
-    };
+        entries.push_back(repo.name);
+    }
 
     auto option = MenuOption::VerticalAnimated();
     option.on_enter = [&]()
     {
-        if (selected == 2)
-        {
-            std::string output = executeGitClone("repo", "dest");
-            some_string = output;
-        }
+        const Repository &selected_repo = repo_config.vector.at(selected_index);
+        const std::string clone_to = repo_config.clone_path + '/' + selected_repo.name;
+
+        std::string output = executeGitClone(selected_repo.url, clone_to);
+
+        console_output = output;
     };
 
-    auto menu = Menu(&entries, &selected, option);
+    auto menu = Menu(&entries, &selected_index, option);
 
-    auto menu_renderer = Renderer([render_option]
-                                  { return vbox({render_option()}); });
+    auto render_console_output = [&console_output]()
+    {
+        return hbox({text("console output: "), text(console_output)});
+    };
+    auto repositories_renderer = Renderer([render_console_output]
+                                          { return vbox({render_console_output()}) | frame; });
 
-    auto menu_container = Container::Vertical({menu, menu_renderer});
+    repositories_renderer |= CatchEvent([&](Event event)
+                                        {
+        if(event == Event::Special("git-clone")) {
+            console_output="git cloned";
+            return false;
+        }
+        return true; });
+    auto repositories_container = Container::Horizontal({menu, repositories_renderer});
 
     // ---------------------------------------------------------------------------
 
@@ -575,7 +586,7 @@ int main()
         Menu(&tab_entries, &tab_index, MenuOption::HorizontalAnimated());
     auto tab_content = Container::Tab(
         {
-            menu_container,
+            repositories_container,
             htop,
             color_tab_renderer,
             spinner_tab_renderer,

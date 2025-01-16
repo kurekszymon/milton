@@ -1,2 +1,2 @@
 #!/bin/zsh
-$MILTON_PATH/build/src/Milton
+$MILTON_PATH/conan/src/Milton

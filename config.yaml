@@ -1,0 +1,8 @@
+--- 
+repositories:
+  clone_path: '~/repos'
+  repos:
+  - xlsx-compare: https://github.com/kurekszymon/xlsx-compare
+  - roomeo: https://github.com/kurekszymon/roomeo
+  - yaml-cpp: https://github.com/jbeder/yaml-cpp
+  - fargo-bitbucket: https://bitbucket.org/fargo3d/public.git
