@@ -66,6 +66,7 @@
         "unordered_set": "cpp",
         "valarray": "cpp",
         "atomic": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "__config": "cpp"
     }
 }

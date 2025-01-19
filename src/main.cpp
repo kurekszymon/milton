@@ -27,40 +27,58 @@
 #include "ftxui/screen/color_info.hpp"            // for ColorInfo
 #include "ftxui/screen/terminal.hpp"              // for Size, Dimensions
 #include "../include/Config.hpp"
+#include "boost/process.hpp"
+#include "boost/filesystem.hpp"
 using namespace ftxui;
 
-// Function to execute a git clone command and return the output
-std::string executeGitClone(const std::string &repo_url, const std::string &target_directory)
+namespace bp = boost::process;
+namespace bfs = boost::filesystem;
+
+std::string parse_home_dir(std::string input_path)
 {
-    std::string command = "git clone " + repo_url + " " + target_directory;
-    std::array<char, 128> buffer;
-    std::string result;
-
-    // Open the process (run the command)
-    std::shared_ptr<FILE> pipe(popen(command.c_str(), "r"), pclose);
-
-    if (!pipe)
+    if (input_path.empty() || input_path[0] != '~')
     {
-        return "Failed to run git clone command.";
+        return input_path;
     }
 
-    // Read the output of the command
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
+    const char *env_home = std::getenv("HOME");               // Unix-like systems (Linux/macOS)
+    const char *env_userprofile = std::getenv("USERPROFILE"); // Windows
+
+    bfs::path home_dir = env_home ? env_home : env_userprofile;
+
+    // handle home not found - decide for try catch / throwing
+
+    bfs::path result = home_dir / input_path.substr(1);
+    return result.string();
+}
+
+std::string execute_git_clone(const std::string &repo_url, const std::string &clone_dir)
+{
+    try
     {
-        result += buffer.data();
+        std::vector<std::string> args = {"clone", repo_url, parse_home_dir(clone_dir)};
+
+        bp::child c(bp::search_path("git"), args);
+
+        c.wait();
+
+        if (c.exit_code() == 0)
+        {
+            std::cout << "Git clone successful!\n";
+            return "success! ";
+        }
+        else
+        {
+            std::string message = "Git clone failed with exit code: " + std::to_string(c.exit_code());
+            return message;
+        }
     }
-
-    // Check the exit status of the command
-    int exit_status = pclose(pipe.get());
-
-    // If the command failed, print the error message and exit status
-    if (exit_status != 0)
+    catch (const std::exception &e)
     {
-        std::stringstream error_msg;
-        return error_msg.str();
+        std::cerr << "Error during git clone: " << e.what() << "\n";
+        std::string error_message = e.what();
+        return error_message;
     }
-
-    return result;
 }
 
 int main()
@@ -544,8 +562,7 @@ int main()
         const Repository &selected_repo = repo_config.vector.at(selected_index);
         const std::string clone_to = repo_config.clone_path + '/' + selected_repo.name;
 
-        std::string output = executeGitClone(selected_repo.url, clone_to);
-
+        std::string output = execute_git_clone(selected_repo.url, clone_to);
         console_output = output;
     };
 
