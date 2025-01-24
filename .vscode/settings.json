@@ -67,6 +67,11 @@
         "valarray": "cpp",
         "atomic": "cpp",
         "utility": "cpp",
-        "__config": "cpp"
+        "__config": "cpp",
+        "codecvt": "cpp",
+        "future": "cpp",
+        "shared_mutex": "cpp",
+        "source_location": "cpp",
+        "typeindex": "cpp"
     }
 }

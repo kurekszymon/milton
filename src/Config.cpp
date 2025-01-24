@@ -21,7 +21,8 @@ Config::Config(const std::string &yaml_file)
 bool Config::load_yaml_config(const std::string &yaml_file)
 {
     YAML::Node config = YAML::LoadFile(yaml_file);
-    if (config["repositories"])
+    // TODO: fix to check seperately and tell user which modules were loaded
+    if (config["repositories"] && config["custom_scripts"])
     {
         auto repos_node = config["repositories"];
         if (repos_node["clone_path"])
@@ -31,19 +32,29 @@ bool Config::load_yaml_config(const std::string &yaml_file)
 
         for (const auto &repo : repos_node["repos"])
         {
-            // The `repo` is a map (YAML::Node) with one key-value pair (name: URL)
-            // Directly access the first key-value pair in the map:
             Repository r;
-            r.name = repo.begin()->first.as<std::string>(); // Get the repository name (key)
-            r.url = repo.begin()->second.as<std::string>(); // Get the repository URL (value)
+            auto _repo = repo.begin();
+            r.name = _repo->first.as<std::string>();
+            r.url = _repo->second.as<std::string>();
             repositories.vector.push_back(r);
+        }
+        auto custom_scripts_node = config["custom_scripts"];
+
+        std::cout << ":hello:" << custom_scripts_node.IsDefined();
+        for (const auto &script : custom_scripts_node)
+        {
+            CustomScript s;
+            auto _script = script.begin();
+            s.name = _script->first.as<std::string>();
+            s.cmd = _script->second.as<std::string>();
+            custom_scripts.push_back(s);
         }
 
         return true;
     }
     else
     {
-        std::cerr << "Repositories section missing in YAML!" << std::endl;
+        std::cerr << "Repositories or custom_scripts section missing in YAML!" << std::endl;
         return false;
     }
 }

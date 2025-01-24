@@ -10,6 +10,12 @@ struct Repository
     std::string url;
 };
 
+struct CustomScript
+{
+    std::string name;
+    std::string cmd;
+};
+
 struct Repositories
 {
     std::string clone_path;
@@ -20,6 +26,7 @@ class Config
 {
 public:
     Repositories repositories;
+    std::vector<CustomScript> custom_scripts;
 
     Config(const std::string &yaml_file);
 

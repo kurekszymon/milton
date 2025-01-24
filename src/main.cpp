@@ -52,6 +52,34 @@ std::string parse_home_dir(std::string input_path)
     return result.string();
 }
 
+std::string execute_custom_command(CustomScript command, std::string messages)
+{
+    try
+    {
+        std::vector<std::string> args = {"-c", command.cmd};
+
+        bp::child c(bp::search_path("sh"), args);
+
+        c.wait();
+
+        if (c.exit_code() == 0)
+        {
+            return "Command executed successfully.";
+        }
+
+        else
+        {
+            std::string message = command.name + " failed with code: " + std::to_string(c.exit_code());
+            return message;
+        }
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Error during custom command execution: " << e.what() << "\n";
+        std::string error_message = e.what();
+        return error_message;
+    }
+}
 std::string execute_git_clone(const std::string &repo_url, const std::string &clone_dir)
 {
     try
@@ -543,46 +571,74 @@ int main()
                  { return paragraph_renderer_group->Render(); });
 
     // ---------------------------------------------------------------------------
+    // Custom Scripts
+    // ---------------------------------------------------------------------------
+
+    auto custom_scripts_config = config->custom_scripts;
+    std::string cs_console_output;
+    int cs_selected_index = 0;
+
+    std::vector<std::string> cs_entries;
+    for (const auto &script : custom_scripts_config)
+    {
+        cs_entries.push_back(script.name);
+    }
+
+    auto cs_option = MenuOption::VerticalAnimated();
+
+    cs_option.on_enter = [&]()
+    {
+        const CustomScript &selected_script = custom_scripts_config.at(cs_selected_index);
+
+        std::string output = execute_custom_command(selected_script, cs_console_output);
+        cs_console_output = output;
+    };
+
+    auto cs_menu = Menu(&cs_entries, &cs_selected_index, cs_option);
+
+    auto cs_render_console_output = [&cs_console_output]()
+    {
+        return hbox({text("console output: "), text(cs_console_output)});
+    };
+    auto cs_renderer = Renderer([cs_render_console_output]
+                                { return vbox({cs_render_console_output()}) | frame; });
+
+    auto cs_container = Container::Horizontal({cs_menu, cs_renderer});
+
+    // ---------------------------------------------------------------------------
     // Repositories
     // ---------------------------------------------------------------------------
 
     auto repo_config = config->repositories;
-    std::string console_output;
-    int selected_index = 0;
+    std::string repositories_console_output;
+    int repositories_selected_index = 0;
 
-    std::vector<std::string> entries;
+    std::vector<std::string> repositories_entries;
     for (const auto &repo : repo_config.vector)
     {
-        entries.push_back(repo.name);
+        repositories_entries.push_back(repo.name);
     }
 
-    auto option = MenuOption::VerticalAnimated();
-    option.on_enter = [&]()
+    auto repositories_option = MenuOption::VerticalAnimated();
+    repositories_option.on_enter = [&]()
     {
-        const Repository &selected_repo = repo_config.vector.at(selected_index);
+        const Repository &selected_repo = repo_config.vector.at(repositories_selected_index);
         const std::string clone_to = repo_config.clone_path + '/' + selected_repo.name;
 
         std::string output = execute_git_clone(selected_repo.url, clone_to);
-        console_output = output;
+        repositories_console_output = output;
     };
 
-    auto menu = Menu(&entries, &selected_index, option);
+    auto repos_menu = Menu(&repositories_entries, &repositories_selected_index, repositories_option);
 
-    auto render_console_output = [&console_output]()
+    auto render_repositories_console_output = [&repositories_console_output]()
     {
-        return hbox({text("console output: "), text(console_output)});
+        return hbox({text("console output: "), text(repositories_console_output)});
     };
-    auto repositories_renderer = Renderer([render_console_output]
-                                          { return vbox({render_console_output()}) | frame; });
+    auto repositories_renderer = Renderer([render_repositories_console_output]
+                                          { return vbox({render_repositories_console_output()}) | frame; });
 
-    repositories_renderer |= CatchEvent([&](Event event)
-                                        {
-        if(event == Event::Special("git-clone")) {
-            console_output="git cloned";
-            return false;
-        }
-        return true; });
-    auto repositories_container = Container::Horizontal({menu, repositories_renderer});
+    auto repositories_container = Container::Horizontal({repos_menu, repositories_renderer});
 
     // ---------------------------------------------------------------------------
 
@@ -592,6 +648,7 @@ int main()
     int tab_index = 0;
     std::vector<std::string> tab_entries = {
         "repositories",
+        "custom scripts",
         "htop",
         "color",
         "spinner",
@@ -604,6 +661,7 @@ int main()
     auto tab_content = Container::Tab(
         {
             repositories_container,
+            cs_container,
             htop,
             color_tab_renderer,
             spinner_tab_renderer,
