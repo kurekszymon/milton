@@ -9,4 +9,4 @@ repositories:
 custom_scripts:
   - echo: echo "hello world" >> ~/.zshrc
   - ls: ls
-  - mkdir: mkdir ~/hello_cpp
+  - mkdir: mkdir ~/hello_crpp

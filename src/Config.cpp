@@ -1,4 +1,4 @@
-#include "../include/Config.hpp"
+#include "Config.hpp" // find out why it squiggles without ../include - maybe some overwrite?
 #include <iostream>
 #include <yaml-cpp/yaml.h>
 
@@ -6,9 +6,11 @@ Config::Config(const std::string &yaml_file)
 {
     try
     {
-        if (!load_yaml_config(yaml_file))
+        load_yaml_config(yaml_file);
+
+        if (loaded_items.size() == 0)
         {
-            throw std::runtime_error("Failed to load config file.");
+            throw std::runtime_error("Make sure to provide correct YAML file.");
         }
     }
     catch (const std::exception &e)
@@ -18,11 +20,10 @@ Config::Config(const std::string &yaml_file)
     }
 }
 
-bool Config::load_yaml_config(const std::string &yaml_file)
+void Config::load_yaml_config(const std::string &yaml_file)
 {
     YAML::Node config = YAML::LoadFile(yaml_file);
-    // TODO: fix to check seperately and tell user which modules were loaded
-    if (config["repositories"] && config["custom_scripts"])
+    if (config["repositories"])
     {
         auto repos_node = config["repositories"];
         if (repos_node["clone_path"])
@@ -38,6 +39,11 @@ bool Config::load_yaml_config(const std::string &yaml_file)
             r.url = _repo->second.as<std::string>();
             repositories.vector.push_back(r);
         }
+
+        load_item(MItem::REPOSITORIES);
+    }
+    if (config["custom_scripts"])
+    {
         auto custom_scripts_node = config["custom_scripts"];
 
         std::cout << ":hello:" << custom_scripts_node.IsDefined();
@@ -49,12 +55,16 @@ bool Config::load_yaml_config(const std::string &yaml_file)
             s.cmd = _script->second.as<std::string>();
             custom_scripts.push_back(s);
         }
+        load_item(MItem::CUSTOM_SCRIPTS);
+    }
+}
 
-        return true;
-    }
-    else
-    {
-        std::cerr << "Repositories or custom_scripts section missing in YAML!" << std::endl;
-        return false;
-    }
+void Config::load_item(MItem item)
+{
+    loaded_items.insert(item);
+}
+
+bool Config::is_item_loaded(MItem item)
+{
+    return loaded_items.find(item) != loaded_items.end();
 }
