@@ -40,13 +40,12 @@ void Config::load_yaml_config(const std::string &yaml_file)
             repositories.vector.push_back(r);
         }
 
-        load_item(MItem::REPOSITORIES);
+        load_item(ConfigItem::REPOSITORIES);
     }
     if (config["custom_scripts"])
     {
         auto custom_scripts_node = config["custom_scripts"];
 
-        std::cout << ":hello:" << custom_scripts_node.IsDefined();
         for (const auto &script : custom_scripts_node)
         {
             CustomScript s;
@@ -55,16 +54,16 @@ void Config::load_yaml_config(const std::string &yaml_file)
             s.cmd = _script->second.as<std::string>();
             custom_scripts.push_back(s);
         }
-        load_item(MItem::CUSTOM_SCRIPTS);
+        load_item(ConfigItem::CUSTOM_SCRIPTS);
     }
 }
 
-void Config::load_item(MItem item)
+void Config::load_item(ConfigItem item)
 {
     loaded_items.insert(item);
 }
 
-bool Config::is_item_loaded(MItem item)
+bool Config::is_item_loaded(ConfigItem item)
 {
     return loaded_items.find(item) != loaded_items.end();
 }

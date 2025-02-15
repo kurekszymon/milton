@@ -23,7 +23,7 @@ struct Repositories
     std::vector<Repository> vector;
 };
 
-enum MItem
+enum ConfigItem
 {
     REPOSITORIES,
     CUSTOM_SCRIPTS,
@@ -32,18 +32,18 @@ enum MItem
 class Config
 {
 public:
-    std::unordered_set<MItem> loaded_items;
+    std::unordered_set<ConfigItem> loaded_items;
 
     Repositories repositories;
     std::vector<CustomScript> custom_scripts;
 
     Config(const std::string &yaml_file);
 
-    bool is_item_loaded(MItem item);
+    bool is_item_loaded(ConfigItem item);
 
 private:
     void load_yaml_config(const std::string &yaml_file);
-    void load_item(MItem item);
+    void load_item(ConfigItem item);
 };
 
 #endif // CONFIG_H

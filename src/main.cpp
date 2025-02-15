@@ -1,23 +1,20 @@
 #include <array>  // for array
 #include <atomic> // for atomic
 #include <chrono> // for operator""s, chrono_literals
-#include <cstdio>
 #include <iostream>
-#include <stdio.h>
-#include <string>                                 // for string, basic_string, char_traits, operator+, to_string
-#include <thread>                                 // for sleep_for, thread
-#include <vector>                                 // for vector
+#include <string> // for string, basic_string, char_traits, operator+, to_string
+#include <thread> // for sleep_for, thread
+#include <vector> // for vector
+
 #include "ftxui/component/component.hpp"          // for Checkbox, Renderer, Horizontal, Vertical, Input, Menu, Radiobox, ResizableSplitLeft, Tab
 #include "ftxui/component/component_base.hpp"     // for ComponentBase, Component
 #include "ftxui/component/component_options.hpp"  // for MenuOption, InputOption
 #include "ftxui/component/event.hpp"              // for Event, Event::Custom
 #include "ftxui/component/screen_interactive.hpp" // for Component, ScreenInteractive
 #include "ftxui/dom/elements.hpp"                 // for text, color, operator|, bgcolor, filler, Element, vbox, size, hbox, separator, flex, window, graph, EQUAL, paragraph, WIDTH, hcenter, Elements, bold, vscroll_indicator, HEIGHT, flexbox, hflow, border, frame, flex_grow, gauge, paragraphAlignCenter, paragraphAlignJustify, paragraphAlignLeft, paragraphAlignRight, dim, spinner, LESS_THAN, center, yframe, GREATER_THAN
+
 #include "Config.hpp"
 #include "Console.hpp"
-#include <map>
-#include <functional>
-#include <stdexcept>
 
 using namespace ftxui;
 
@@ -30,9 +27,8 @@ int main()
     int tab_index = 0;
     std::vector<std::string> tab_entries = {};
 
-    std::vector<ftxui::Component> components = {};
     auto tab_content = Container::Tab(
-        components,
+        {},
         &tab_index);
 
     // ---------------------------------------------------------------------------
@@ -70,7 +66,7 @@ int main()
 
     auto cs_container = Container::Horizontal({cs_menu, cs_renderer});
 
-    if (config->is_item_loaded(MItem::CUSTOM_SCRIPTS))
+    if (config->is_item_loaded(ConfigItem::CUSTOM_SCRIPTS))
     {
         tab_entries.push_back("custom scripts");
         tab_content->Add(cs_container);
@@ -110,7 +106,7 @@ int main()
 
     auto repositories_container = Container::Horizontal({repos_menu, repositories_renderer});
 
-    if (config->is_item_loaded(MItem::REPOSITORIES))
+    if (config->is_item_loaded(ConfigItem::REPOSITORIES))
     {
         tab_entries.push_back("repositories");
         tab_content->Add(repositories_container);
