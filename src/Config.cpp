@@ -1,4 +1,4 @@
-#include "Config.hpp" // find out why it squiggles without ../include - maybe some overwrite?
+#include "Config.hpp"
 #include <iostream>
 #include <yaml-cpp/yaml.h>
 
@@ -56,14 +56,44 @@ void Config::load_yaml_config(const std::string &yaml_file)
         }
         load_item(ConfigItem::CUSTOM_SCRIPTS);
     }
+
+    if (config["languages"])
+    {
+        auto languages_node = config["languages"];
+
+        for (const auto &language_entry : languages_node)
+        {
+            for (const auto &language : language_entry)
+            {
+                std::string language_name = language.first.as<std::string>();
+
+                std::cout << "Language: " << language_name << std::endl;
+
+                auto tools = language.second;
+
+                for (const auto &tool : tools)
+                {
+                    for (const auto &tool_entry : tool)
+                    {
+                        std::string tool_name = tool_entry.first.as<std::string>();
+                        std::string tool_value = tool_entry.second.as<std::string>();
+
+                        std::cout << "  Tool: " << tool_name << " -> " << tool_value << std::endl;
+
+                        load_item(language_mapper.at(language_name).at(tool_name));
+                    }
+                }
+            }
+        }
+    }
 }
 
-void Config::load_item(ConfigItem item)
+void Config::load_item(MItem item)
 {
     loaded_items.insert(item);
 }
 
-bool Config::is_item_loaded(ConfigItem item)
+bool Config::is_item_loaded(MItem item)
 {
     return loaded_items.find(item) != loaded_items.end();
 }

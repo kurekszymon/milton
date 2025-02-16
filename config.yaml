@@ -10,3 +10,12 @@ custom_scripts:
   - echo: echo "hello world" >> ~/.zshrc
   - ls: ls
   - mkdir: mkdir ~/hello_crpp
+languages: 
+  - cpp: 
+    - emscripten: 'emsdk-123'
+    - cmake: 'cmake-123'
+    - ninja: 'ninja-123'
+  - python: 
+    - cpython: 'python3-123'
+  - js:
+    - node: 'v8-123'
